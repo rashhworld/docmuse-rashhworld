@@ -47,29 +47,55 @@ const App = () => {
   }, [conversation]);
 
   return (
-    <div className="app-container flex flex-col h-screen max-w-3xl mx-auto p-4">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
       <div
         ref={chatContainerRef}
-        className="flex-grow space-y-4 mb-4 overflow-y-auto border border-gray-300 rounded-lg p-4"
+        className="flex-grow space-y-4 mb-4 overflow-y-auto rounded-xl p-4 bg-white"
       >
-        {conversation.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              msg.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
+        {conversation.length > 0 ? (
+          conversation.map((msg, index) => (
             <div
-              className={`px-4 py-2 max-w-md rounded-lg ${
-                msg.sender === "user"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
+              key={index}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              {msg.text}
+              <div
+                className={`px-4 py-2 max-w-md rounded-lg ${
+                  msg.sender === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center mt-5">
+            <p className="text-lg font-medium">Please start by asking</p>
+            <div className="flex flex-wrap justify-center gap-3 mt-4">
+              <span
+                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
+                onClick={() => setQuestion("What is the PDF document about?")}
+              >
+                What is the PDF document about?
+              </span>
+              <span
+                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
+                onClick={() => setQuestion("Can you summarize the PDF?")}
+              >
+                Can you summarize the PDF?
+              </span>
+              <span
+                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
+                onClick={() => setQuestion("What information do you have?")}
+              >
+                What information do you have?
+              </span>
             </div>
           </div>
-        ))}
+        )}
         {loading && (
           <div className="flex justify-start">
             <div className="px-4 py-2 max-w-md rounded-lg bg-gray-200 text-gray-800">
@@ -79,20 +105,17 @@ const App = () => {
         )}
       </div>
 
-      <form
-        className="input-container flex items-center"
-        onSubmit={handleSubmit}
-      >
+      <form className="flex items-center" onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Type your question here..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="outline-none px-4 py-3 rounded-l-lg border border-gray-300 w-full"
+          className="outline-none px-4 py-3 rounded-l-lg border border-blue-500 w-full"
         />
         <button
           type="submit"
-          className="submit-btn px-6 py-3 bg-blue-500 border border-blue-500 text-white rounded-r-lg"
+          className="px-6 py-3 bg-blue-500 border border-blue-500 text-white font-medium rounded-r-lg"
         >
           Submit
         </button>
