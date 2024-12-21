@@ -1,12 +1,125 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Toaster, toast } from "react-hot-toast";
+import Sidebar from "./components/Sidebar";
+import ChatContainer from "./components/ChatContainer";
+
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const App = () => {
+  const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [conversation, setConversation] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [pdfLink, setPdfLink] = useState("");
+  const [pdfLinks, setPdfLinks] = useState([]);
+  const [selectedPdf, setSelectedPdf] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    const savedLinks = JSON.parse(localStorage.getItem("pdfLinks") || "[]");
+    setPdfLinks(savedLinks);
+  }, []);
+
+  const getPdfTitle = async (url) => {
+    try {
+      const response = await fetch(`${baseURL}/get-pdf-title`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdfUrl: url }),
+      });
+      const data = await response.json();
+      return data.title;
+    } catch (err) {
+      console.error("Error getting PDF title:", err);
+      toast.error("Failed to get PDF title");
+      return null;
+    }
+  };
+
+  const isPdfUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname.toLowerCase().endsWith(".pdf");
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handlePdfSubmit = async (e) => {
+    e.preventDefault();
+    if (!pdfLink) return;
+
+    if (!isPdfUrl(pdfLink)) {
+      toast.error("Please enter a valid PDF URL");
+      return;
+    }
+
+    if (pdfLinks.some((pdf) => pdf.url === pdfLink)) {
+      toast.error("This PDF has already been added");
+      return;
+    }
+
+    setIsProcessing(true);
+    const loadingToast = toast.loading("Processing PDF...");
+
+    try {
+      const response = await fetch(`${baseURL}/set-pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdfUrl: pdfLink }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add PDF");
+      }
+
+      const title = await getPdfTitle(pdfLink);
+      const newPdf = { url: pdfLink, title };
+      const newLinks = [...pdfLinks, newPdf];
+      
+      setPdfLinks(newLinks);
+      localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
+      setSelectedPdf(pdfLink);
+      setPdfLink("");
+      setConversation([]);
+      toast.success(`PDF "${title || "Untitled"}" added successfully!`, {
+        id: loadingToast,
+      });
+    } catch (err) {
+      console.error("Error setting PDF:", err);
+      toast.error("Failed to add PDF", {
+        id: loadingToast,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const selectPdf = async (url) => {
+    const loadingToast = toast.loading("Switching PDF...");
+    try {
+      const response = await fetch(`${baseURL}/set-pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdfUrl: url }),
+      });
+
+      if (response.ok) {
+        setSelectedPdf(url);
+        setConversation([]);
+        const selectedPdfData = pdfLinks.find((pdf) => pdf.url === url);
+        toast.success(`Switched to "${selectedPdfData?.title || "Untitled"}"`, {
+          id: loadingToast,
+        });
+      }
+    } catch (err) {
+      console.error("Error selecting PDF:", err);
+      toast.error("Failed to switch PDF", {
+        id: loadingToast,
+      });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,80 +159,51 @@ const App = () => {
     }
   }, [conversation]);
 
-  return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
-      <div
-        ref={chatContainerRef}
-        className="flex-grow space-y-4 mb-4 overflow-y-auto rounded-xl p-4 bg-white"
-      >
-        {conversation.length > 0 ? (
-          conversation.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                msg.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`px-4 py-2 max-w-md rounded-lg ${
-                  msg.sender === "user"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center mt-5">
-            <p className="text-lg font-medium">Please start by asking</p>
-            <div className="flex flex-wrap justify-center gap-3 mt-4">
-              <span
-                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
-                onClick={() => setQuestion("What is the PDF document about?")}
-              >
-                What is the PDF document about?
-              </span>
-              <span
-                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
-                onClick={() => setQuestion("Can you summarize the PDF?")}
-              >
-                Can you summarize the PDF?
-              </span>
-              <span
-                className="bg-gray-100 rounded-full px-6 py-2 cursor-pointer"
-                onClick={() => setQuestion("What information do you have?")}
-              >
-                What information do you have?
-              </span>
-            </div>
-          </div>
-        )}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="px-4 py-2 max-w-md rounded-lg bg-gray-200 text-gray-800">
-              Almost there! Gathering the info for you...
-            </div>
-          </div>
-        )}
-      </div>
+  const deletePdf = (url) => {
+    const newLinks = pdfLinks.filter((pdf) => pdf.url !== url);
+    setPdfLinks(newLinks);
+    localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
 
-      <form className="flex items-center" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Type your question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="outline-none px-4 py-3 rounded-l-lg border border-blue-500 w-full"
+    if (selectedPdf === url) {
+      setSelectedPdf(null);
+      setConversation([]);
+    }
+
+    toast.success("PDF removed successfully");
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar
+        pdfLink={pdfLink}
+        setPdfLink={setPdfLink}
+        handlePdfSubmit={handlePdfSubmit}
+        pdfLinks={pdfLinks}
+        selectedPdf={selectedPdf}
+        selectPdf={selectPdf}
+        isLoading={isProcessing}
+        deletePdf={deletePdf}
+      />
+      <div className="flex-1 flex items-center justify-center">
+        <ChatContainer
+          chatContainerRef={chatContainerRef}
+          conversation={conversation}
+          setQuestion={setQuestion}
+          question={question}
+          handleSubmit={handleSubmit}
+          loading={loading}
+          selectedPdf={selectedPdf}
         />
-        <button
-          type="submit"
-          className="px-6 py-3 bg-blue-500 border border-blue-500 text-white font-medium rounded-r-lg"
-        >
-          Submit
-        </button>
-      </form>
+      </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+        }}
+      />
     </div>
   );
 };
