@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { toast } from "react-hot-toast";
 
 const Sidebar = ({
   pdfLink,
@@ -11,15 +12,31 @@ const Sidebar = ({
   deletePdf,
   isSidebarOpen,
   setIsSidebarOpen,
+  apiKey,
+  setApiKey,
 }) => {
+  const [isEditingKey, setIsEditingKey] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+
+  const handleApiKeyChange = (e) => {
+    const newApiKey = e.target.value;
+    setApiKey(newApiKey);
+  };
+
+  const handleSaveKey = () => {
+    localStorage.setItem("docmuseAPI", apiKey);
+    setIsEditingKey(false);
+    toast.success("API key saved successfully");
+  };
+
   return (
     <div
-      className={`fixed top-0 left-0 z-10 w-96 bg-white border-r border-gray-200 h-screen overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      className={`fixed top-0 left-0 z-10 w-96 bg-white border-r border-gray-200 h-screen transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <div className="p-6">
-        <div className="mb-8">
+      <div className="flex flex-col h-full">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between space-x-2 mb-4">
             <h2 className="text-xl font-bold text-gray-700">
               DOCMUSE <span className="text-blue-500">AI</span>
@@ -91,7 +108,8 @@ const Sidebar = ({
             </button>
           </form>
         </div>
-        <div>
+
+        <div className="flex-grow overflow-y-auto p-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-4">
             Your Documents
           </h3>
@@ -179,6 +197,116 @@ const Sidebar = ({
               <p className="mt-2 text-sm text-gray-500">No PDFs added yet</p>
             </div>
           )}
+        </div>
+
+        <div className="p-4 border-t border-gray-200">
+          <div className="mb-2">
+            <button
+              onClick={() => setShowInstructions(!showInstructions)}
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              How to get API key and get started?
+              <svg
+                className={`w-4 h-4 ml-1 transform transition-transform ${
+                  showInstructions ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {showInstructions && (
+            <div className="mb-3 p-3 bg-blue-50 rounded-lg text-sm text-gray-700">
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>
+                  Visit{" "}
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Google AI Studio
+                  </a>
+                </li>
+                <li>Sign in with your Google account</li>
+                <li>Click on "Create API key"</li>
+                <li>Copy and paste the API key here</li>
+                <li>
+                  Use this demo PDF URL to test the app:
+                  <br />
+                  <p className="text-blue-600 hover:underline">
+                    https://pdfobject.com/pdf/sample.pdf
+                  </p>
+                </li>
+              </ol>
+            </div>
+          )}
+
+          <div className="relative">
+            <input
+              type={`${isEditingKey ? "text" : "password"}`}
+              placeholder="Enter Gemini API Key"
+              value={apiKey}
+              onChange={handleApiKeyChange}
+              disabled={!isEditingKey}
+              className={`w-full px-4 py-2 pr-16 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                !isEditingKey ? "bg-gray-50" : "bg-white"
+              }`}
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-2">
+              {isEditingKey ? (
+                <button
+                  onClick={handleSaveKey}
+                  className="p-1.5 text-green-600 hover:text-green-800"
+                  title="Save API key"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsEditingKey(true)}
+                  className="p-1.5 text-gray-600 hover:text-gray-800"
+                  title="Edit API key"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

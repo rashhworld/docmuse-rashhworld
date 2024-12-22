@@ -14,6 +14,9 @@ const App = () => {
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [apiKey, setApiKey] = useState(
+    () => localStorage.getItem("docmuseAPI") || ""
+  );
 
   const chatContainerRef = useRef(null);
 
@@ -117,6 +120,11 @@ const App = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!apiKey) {
+      toast.error("Please enter your Gemini API key");
+      return;
+    }
+
     if (!question) return;
 
     setConversation([...conversation, { text: question, sender: "user" }]);
@@ -126,9 +134,20 @@ const App = () => {
       setLoading(true);
       const response = await fetch(`${baseURL}/ask-question`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": apiKey,
+        },
         body: JSON.stringify({ question }),
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error("Invalid API key");
+          return;
+        }
+        throw new Error("Request failed");
+      }
 
       const data = await response.json();
 
@@ -140,6 +159,7 @@ const App = () => {
       }
     } catch (err) {
       console.error("Error occurred while processing the request.", err);
+      toast.error("Failed to get response");
     } finally {
       setLoading(false);
     }
@@ -178,6 +198,8 @@ const App = () => {
         deletePdf={deletePdf}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        apiKey={apiKey}
+        setApiKey={setApiKey}
       />
       <div className="flex-1 flex items-center justify-center">
         <ChatContainer

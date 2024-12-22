@@ -5,10 +5,6 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const apiUrl =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" +
-  process.env.GEMINI_API_KEY;
-
 app.use(cors());
 app.use(express.json());
 
@@ -90,11 +86,18 @@ app.post("/get-pdf-title", async (req, res) => {
 
 app.post("/ask-question", async (req, res) => {
   try {
+    const apiKey = req.headers['x-api-key'];
+
+    if (!apiKey) {
+      return res.status(401).json({ error: "API key is required" });
+    }
+
     if (!currentPdfPath) {
       return res.status(400).json({ error: "No PDF selected" });
     }
 
     const question = req.body.question;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const response = await fetch(currentPdfPath);
     if (!response.ok) {
