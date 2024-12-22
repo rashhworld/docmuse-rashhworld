@@ -12,6 +12,7 @@ const App = () => {
   const [pdfLink, setPdfLink] = useState("");
   const [pdfLinks, setPdfLinks] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const chatContainerRef = useRef(null);
@@ -61,8 +62,6 @@ const App = () => {
     }
 
     setIsProcessing(true);
-    const loadingToast = toast.loading("Processing PDF...");
-
     try {
       const response = await fetch(`${baseURL}/set-pdf`, {
         method: "POST",
@@ -70,27 +69,21 @@ const App = () => {
         body: JSON.stringify({ pdfUrl: pdfLink }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to add PDF");
-      }
+      if (!response.ok) throw new Error("Failed to add PDF");
 
       const title = await getPdfTitle(pdfLink);
       const newPdf = { url: pdfLink, title };
       const newLinks = [...pdfLinks, newPdf];
-      
+
       setPdfLinks(newLinks);
       localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
       setSelectedPdf(pdfLink);
       setPdfLink("");
       setConversation([]);
-      toast.success(`PDF "${title || "Untitled"}" added successfully!`, {
-        id: loadingToast,
-      });
+      toast.success(`PDF "${title || "Untitled"}" added successfully!`);
     } catch (err) {
       console.error("Error setting PDF:", err);
-      toast.error("Failed to add PDF", {
-        id: loadingToast,
-      });
+      toast.error("Failed to add PDF");
     } finally {
       setIsProcessing(false);
     }
@@ -183,6 +176,8 @@ const App = () => {
         selectPdf={selectPdf}
         isLoading={isProcessing}
         deletePdf={deletePdf}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
       />
       <div className="flex-1 flex items-center justify-center">
         <ChatContainer
@@ -193,8 +188,17 @@ const App = () => {
           handleSubmit={handleSubmit}
           loading={loading}
           selectedPdf={selectedPdf}
+          setIsSidebarOpen={setIsSidebarOpen}
         />
       </div>
+      {isSidebarOpen && (
+        <div
+          className={`fixed inset-0 bg-black/50 z-5`}
+          onClick={() => {
+            setIsSidebarOpen(false);
+          }}
+        />
+      )}
       <Toaster
         position="top-right"
         toastOptions={{

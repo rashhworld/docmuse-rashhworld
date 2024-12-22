@@ -10,20 +10,35 @@ const ChatContainer = ({
   handleSubmit,
   loading,
   selectedPdf,
+  setIsSidebarOpen,
 }) => {
-  const suggestions = [
-    "What is the PDF document about?",
-    "Can you summarize the PDF in short?",
-    "What are the possible questions made?",
-  ];
-
   return (
-    <div className="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 h-[95vh] w-[800px]">
+    <div className="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 h-[95vh] lg:ml-96 w-full max-w-[800px] mx-4">
       <div className="flex-none border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm uppercase font-bold text-gray-800">
-            Chat with your PDF
-          </h2>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+            <h2 className="hidden sm:block text-sm uppercase font-bold text-gray-800">
+              Chat with your PDF
+            </h2>
+          </div>
           <div className="flex items-center space-x-2">
             <span
               className={`w-2 h-2 rounded-full ${
@@ -75,19 +90,6 @@ const ChatContainer = ({
                     : "Upload or select a PDF from the sidebar to start chatting"}
                 </p>
               </div>
-              {selectedPdf && (
-                <div className="flex flex-wrap justify-center gap-3">
-                  {suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setQuestion(suggestion)}
-                      className="w-full px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         )}

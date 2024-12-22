@@ -6,7 +6,7 @@ const ChatMessage = ({ message }) => {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[70%] ${
+        className={`flex w-full md:max-w-[70%] ${
           isUser ? "flex-row-reverse" : "flex-row"
         }`}
       >

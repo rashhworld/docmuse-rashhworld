@@ -9,16 +9,40 @@ const Sidebar = ({
   selectPdf,
   isLoading,
   deletePdf,
+  isSidebarOpen,
+  setIsSidebarOpen,
 }) => {
   return (
-    <div className="w-96 bg-white border-r border-gray-200 h-screen overflow-y-auto">
+    <div
+      className={`fixed top-0 left-0 z-10 w-96 bg-white border-r border-gray-200 h-screen overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div className="p-6">
         <div className="mb-8">
           <div className="flex items-center justify-between space-x-2 mb-4">
             <h2 className="text-xl font-bold text-gray-700">
               DOCMUSE <span className="text-blue-500">AI</span>
             </h2>
-            <img src="/logo.png" alt="Docmuse AI" className="h-7" />
+            <img
+              src="/logo.png"
+              alt="Docmuse AI"
+              className="h-7 lg:block hidden"
+            />
+            <svg
+              className="w-6 h-6 text-gray-600 lg:hidden cursor-pointer"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </div>
 
           <form onSubmit={handlePdfSubmit} className="space-y-3">
@@ -84,7 +108,10 @@ const Sidebar = ({
                 >
                   <div
                     className="flex items-center space-x-3"
-                    onClick={() => selectPdf(pdf.url)}
+                    onClick={() => {
+                      selectPdf(pdf.url);
+                      setIsSidebarOpen(false);
+                    }}
                   >
                     <div className="flex-shrink-0">
                       <svg
