@@ -31,7 +31,7 @@ const Sidebar = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 z-10 w-96 bg-white border-r border-gray-200 h-screen transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      className={`fixed top-0 left-0 z-10 w-full sm:w-96 bg-white border-r border-gray-200 h-[100dvh] transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -109,8 +109,8 @@ const Sidebar = ({
           </form>
         </div>
 
-        <div className="flex-grow overflow-y-auto p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+        <div className="flex-grow overflow-y-auto p-6 py-4">
+          <h3 className="text-lg font-medium text-gray-700 mb-4">
             Your Documents
           </h3>
           {pdfLinks.length > 0 ? (
@@ -151,7 +151,7 @@ const Sidebar = ({
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-sm text-gray-900 truncate">
                         {pdf.title || "Untitled PDF"}
                       </p>
                     </div>
@@ -245,7 +245,7 @@ const Sidebar = ({
                   Use this demo PDF URL to test the app:
                   <br />
                   <p className="text-blue-600 hover:underline">
-                    https://pdfobject.com/pdf/sample.pdf
+                    https://docmuse.onrender.com/demo.pdf
                   </p>
                 </li>
               </ol>

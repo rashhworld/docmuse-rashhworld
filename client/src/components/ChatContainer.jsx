@@ -13,28 +13,24 @@ const ChatContainer = ({
   setIsSidebarOpen,
 }) => {
   return (
-    <div className="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 h-[95vh] lg:ml-96 w-full max-w-[800px] mx-4">
+    <div className="flex flex-col bg-white sm:rounded-2xl shadow-lg border border-gray-200 h-[100dvh] sm:h-[95vh] lg:ml-96 w-full max-w-[800px] sm:mx-4">
       <div className="flex-none border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button
+            <svg
+              className="w-6 h-6 text-gray-600 lg:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
             >
-              <svg
-                className="w-6 h-6 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
             <h2 className="hidden sm:block text-sm uppercase font-bold text-gray-800">
               Chat with your PDF
             </h2>
@@ -95,7 +91,7 @@ const ChatContainer = ({
         )}
       </div>
 
-      <div className="flex-none p-4 bg-gray-50 rounded-b-2xl border-t border-gray-200">
+      <div className="flex-none p-4 rounded-b-2xl border-t">
         <ChatInput
           question={question}
           setQuestion={setQuestion}

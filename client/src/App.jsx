@@ -186,7 +186,7 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-[100dvh] bg-gray-100">
       <Sidebar
         pdfLink={pdfLink}
         setPdfLink={setPdfLink}
