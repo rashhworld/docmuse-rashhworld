@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-const pdfUploadApi = "https://superadmin.testfree.in/misc/upload/media?user=docmuse";
 
 const Sidebar = ({
   pdfLink,
@@ -19,6 +18,7 @@ const Sidebar = ({
 }) => {
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isUploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -29,29 +29,37 @@ const Sidebar = ({
       return;
     }
 
-    setIsProcessing(true);
+    setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const response = await fetch(pdfUploadApi, {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://superadmin.testfree.in/misc/upload/media?user=docmuse",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
       if (data.status === "success") {
+        setUploading(false);
+        setIsProcessing(true);
         setPdfLink(data.url);
-        await handlePdfSubmit(e, data.url);
+        await handlePdfSubmit(e, data.url, file.name);
       } else {
         throw new Error("Upload failed");
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error("Failed to upload PDF");
+      toast.error(error.message || "Failed to upload PDF");
+      setPdfLink("");
     } finally {
       setIsProcessing(false);
+      setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -100,22 +108,22 @@ const Sidebar = ({
           </div>
 
           <form onSubmit={handlePdfSubmit} className="space-y-3">
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full">
               <input
                 type="text"
                 placeholder="Paste PDF URL ..."
                 value={pdfLink}
                 onChange={(e) => setPdfLink(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                disabled={isProcessing}
+                className="w-0 min-w-0 flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                disabled={isProcessing || isUploading}
               />
-              <label className="w-12 h-10 flex justify-center items-center bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 active:bg-gray-300 transition-all">
+              <label className="w-12 h-10 shrink-0 flex justify-center items-center bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 active:bg-gray-300 transition-all">
                 <input
                   type="file"
                   accept=".pdf"
                   className="hidden"
                   onChange={handleFileUpload}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isUploading}
                 />
                 <svg
                   className="w-6 h-6"
@@ -139,7 +147,7 @@ const Sidebar = ({
                 isProcessing || !pdfLink ? "cursor-not-allowed" : ""
               }`}
             >
-              {isProcessing ? (
+              {isProcessing || isUploading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <svg
                     className="animate-spin h-5 w-5 text-white"
@@ -161,7 +169,9 @@ const Sidebar = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <span>Processing...</span>
+                  <span>
+                    {isUploading ? "Uploading PDF" : "Processing PDF"}
+                  </span>
                 </div>
               ) : (
                 "Add Document"
@@ -188,7 +198,7 @@ const Sidebar = ({
                   <div
                     className="flex items-center space-x-3"
                     onClick={() => {
-                      selectPdf(pdf.url);
+                      selectedPdf !== pdf.url && selectPdf(pdf.url);
                       setIsSidebarOpen(false);
                     }}
                   >
@@ -255,7 +265,9 @@ const Sidebar = ({
                   d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <p className="mt-2 text-sm text-gray-500">No documents added yet</p>
+              <p className="mt-2 text-sm text-gray-500">
+                No documents added yet
+              </p>
             </div>
           )}
         </div>

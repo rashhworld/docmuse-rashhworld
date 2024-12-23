@@ -8,7 +8,11 @@ const ChatInput = ({
   selectedPdf,
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="mt-4">
+    <form onSubmit={handleSubmit}>
+      <p className="text-sm text-gray-400 text-center mb-2">
+        Larger PDFs may take more time to process.{" "}
+        <span className="hidden sm:inline-block">Please be patient.</span>
+      </p>
       <div className="relative">
         <input
           type="text"

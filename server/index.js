@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 let currentPdfPath = null;
+const geminiURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
 
 const isPdfUrl = (url) => {
   try {
@@ -39,48 +40,29 @@ app.post("/set-pdf", async (req, res) => {
     const { pdfUrl } = req.body;
 
     if (!isPdfUrl(pdfUrl)) {
-      return res.status(400).json({ error: "Invalid PDF URL format" });
+      return res.status(400).json({ status: "error", msg: "Invalid PDF URL format" });
     }
 
     if (!(await isPdfAccessible(pdfUrl))) {
-      return res.status(400).json({ error: "PDF is not accessible" });
-    }
-
-    currentPdfPath = pdfUrl;
-    res.status(200).json({ message: "PDF URL updated successfully" });
-  } catch (error) {
-    console.error("Error setting PDF URL:", error);
-    res.status(500).json({ error: "Failed to set PDF URL" });
-  }
-});
-
-app.post("/get-pdf-title", async (req, res) => {
-  try {
-    const { pdfUrl } = req.body;
-
-    if (!isPdfUrl(pdfUrl)) {
-      return res.status(400).json({ error: "Invalid PDF URL format" });
+      return res.status(400).json({ status: "error", msg: "PDF is not accessible" });
     }
 
     const response = await fetch(pdfUrl);
-    if (!response.ok) {
-      throw new Error('Failed to fetch PDF');
-    }
-
     const buffer = await response.buffer();
     const pdfData = await pdfParse(buffer);
 
-    let title = pdfData.info.Title || '';
-
-    if (!title) {
-      const firstLine = pdfData.text.split('\n')[0];
-      title = firstLine.slice(0, 50).trim() + (firstLine.length > 50 ? '...' : '');
+    if (pdfData.numpages > 50) {
+      return res.status(400).json({
+        status: "error",
+        msg: "Please upload a file with no more than 50 pages."
+      });
     }
 
-    res.json({ title: title || 'Untitled PDF' });
+    currentPdfPath = pdfUrl;
+    res.status(200).json({ status: "success", msg: "PDF URL updated successfully" });
   } catch (error) {
-    console.error("Error getting PDF title:", error);
-    res.status(500).json({ error: "Failed to get PDF title" });
+    console.error("Error setting PDF URL:", error);
+    res.status(500).json({ status: "error", msg: "Failed to set PDF URL" });
   }
 });
 
@@ -89,20 +71,29 @@ app.post("/ask-question", async (req, res) => {
     const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
-      return res.status(401).json({ error: "API key is required" });
+      return res.status(401).json({ status: "error", msg: "API key is required" });
+    }
+
+    const testResponse = await fetch(`${geminiURL}${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "test" }] }]
+      })
+    });
+
+    if (!testResponse.ok) {
+      return res.status(401).json({ status: "error", msg: "Invalid API key" });
     }
 
     if (!currentPdfPath) {
-      return res.status(400).json({ error: "No PDF selected" });
+      return res.status(400).json({ status: "error", msg: "No PDF selected" });
     }
 
     const question = req.body.question;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const response = await fetch(currentPdfPath);
-    if (!response.ok) {
-      throw new Error('Failed to fetch PDF');
-    }
+    if (!response.ok) throw new Error('Failed to fetch PDF');
 
     const buffer = await response.buffer();
     const pdfData = await pdfParse(buffer);
@@ -120,7 +111,7 @@ app.post("/ask-question", async (req, res) => {
       ],
     };
 
-    const geminiResponse = await fetch(apiUrl, {
+    const geminiResponse = await fetch(`${geminiURL}${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestData),
@@ -130,15 +121,16 @@ app.post("/ask-question", async (req, res) => {
 
     if (data.candidates && data.candidates[0].content.parts[0]) {
       const answer = data.candidates[0].content.parts[0].text;
-      return res.json({ answer });
+      return res.status(200).json({ status: "success", answer });
     } else {
       return res.status(500).json({
-        error: "Sorry, I didn't understand your question.",
+        status: "error",
+        msg: "Sorry, I didn't understand your question.",
       });
     }
   } catch (error) {
     console.error("Error:", error);
-    return res.status(500).json({ error: "An error occurred while processing your request." });
+    return res.status(500).json({ status: "error", msg: "An error occurred" });
   }
 });
 

@@ -25,22 +25,6 @@ const App = () => {
     setPdfLinks(savedLinks);
   }, []);
 
-  const getPdfTitle = async (url) => {
-    try {
-      const response = await fetch(`${baseURL}/get-pdf-title`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdfUrl: url }),
-      });
-      const data = await response.json();
-      return data.title;
-    } catch (err) {
-      console.error("Error getting PDF title:", err);
-      toast.error("Failed to get PDF title");
-      return null;
-    }
-  };
-
   const isPdfUrl = (url) => {
     try {
       const urlObj = new URL(url);
@@ -50,9 +34,11 @@ const App = () => {
     }
   };
 
-  const handlePdfSubmit = async (e, link = pdfLink) => {
+  const handlePdfSubmit = async (e, link = pdfLink, filename = null) => {
     e.preventDefault();
     if (!link) return;
+
+    const filenamePart = link.split("/").pop();
 
     if (!isPdfUrl(link)) {
       toast.error("Please enter a valid PDF URL");
@@ -72,21 +58,25 @@ const App = () => {
         body: JSON.stringify({ pdfUrl: link }),
       });
 
-      if (!response.ok) throw new Error("Failed to add PDF");
+      const { status, msg } = await response.json();
+      if (status === "success") {
+        const title = filename ?? decodeURIComponent(filenamePart);
+        const newPdf = { url: link, title };
+        const newLinks = [...pdfLinks, newPdf];
 
-      const title = await getPdfTitle(link);
-      const newPdf = { url: link, title };
-      const newLinks = [...pdfLinks, newPdf];
-
-      setPdfLinks(newLinks);
-      localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
-      setSelectedPdf(link);
-      setPdfLink("");
-      setConversation([]);
-      toast.success(`PDF "${title || "Untitled"}" added successfully!`);
+        setPdfLinks(newLinks);
+        localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
+        setSelectedPdf(link);
+        setPdfLink("");
+        setConversation([]);
+        toast.success(`PDF "${title}" added successfully!`);
+      } else {
+        setPdfLink("");
+        filename && (await invokeDeleteAPi(filenamePart));
+        toast.error(msg);
+      }
     } catch (err) {
-      console.error("Error setting PDF:", err);
-      toast.error("Failed to add PDF");
+      console.error(err);
     } finally {
       setIsProcessing(false);
     }
@@ -101,19 +91,19 @@ const App = () => {
         body: JSON.stringify({ pdfUrl: url }),
       });
 
-      if (response.ok) {
+      const { status, msg } = await response.json();
+      if (status === "success") {
         setSelectedPdf(url);
         setConversation([]);
         const selectedPdfData = pdfLinks.find((pdf) => pdf.url === url);
         toast.success(`Switched to "${selectedPdfData?.title || "Untitled"}"`, {
           id: loadingToast,
         });
+      } else {
+        toast.error(msg, { id: loadingToast });
       }
     } catch (err) {
-      console.error("Error selecting PDF:", err);
-      toast.error("Failed to switch PDF", {
-        id: loadingToast,
-      });
+      console.error(err);
     }
   };
 
@@ -141,25 +131,14 @@ const App = () => {
         body: JSON.stringify({ question }),
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error("Invalid API key");
-          return;
-        }
-        throw new Error("Request failed");
-      }
-
-      const data = await response.json();
-
-      if (data.answer) {
-        setConversation((prev) => [
-          ...prev,
-          { text: data.answer, sender: "bot" },
-        ]);
+      const { status, msg, answer } = await response.json();
+      if (status === "success") {
+        setConversation((prev) => [...prev, { text: answer, sender: "bot" }]);
+      } else {
+        toast.error(msg);
       }
     } catch (err) {
-      console.error("Error occurred while processing the request.", err);
-      toast.error("Failed to get response");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -172,7 +151,8 @@ const App = () => {
     }
   }, [conversation]);
 
-  const deletePdf = (url) => {
+  const deletePdf = async (url) => {
+    const filename = url.split("/").pop();
     const newLinks = pdfLinks.filter((pdf) => pdf.url !== url);
     setPdfLinks(newLinks);
     localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
@@ -182,7 +162,19 @@ const App = () => {
       setConversation([]);
     }
 
+    await invokeDeleteAPi(filename);
     toast.success("PDF removed successfully");
+  };
+
+  const invokeDeleteAPi = async (filename) => {
+    await fetch(
+      `https://superadmin.testfree.in/misc/delete/media?user=docmuse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: filename }),
+      }
+    );
   };
 
   return (
