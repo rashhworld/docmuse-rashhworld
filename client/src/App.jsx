@@ -50,16 +50,16 @@ const App = () => {
     }
   };
 
-  const handlePdfSubmit = async (e) => {
+  const handlePdfSubmit = async (e, link = pdfLink) => {
     e.preventDefault();
-    if (!pdfLink) return;
+    if (!link) return;
 
-    if (!isPdfUrl(pdfLink)) {
+    if (!isPdfUrl(link)) {
       toast.error("Please enter a valid PDF URL");
       return;
     }
 
-    if (pdfLinks.some((pdf) => pdf.url === pdfLink)) {
+    if (pdfLinks.some((pdf) => pdf.url === link)) {
       toast.error("This PDF has already been added");
       return;
     }
@@ -69,18 +69,18 @@ const App = () => {
       const response = await fetch(`${baseURL}/set-pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdfUrl: pdfLink }),
+        body: JSON.stringify({ pdfUrl: link }),
       });
 
       if (!response.ok) throw new Error("Failed to add PDF");
 
-      const title = await getPdfTitle(pdfLink);
-      const newPdf = { url: pdfLink, title };
+      const title = await getPdfTitle(link);
+      const newPdf = { url: link, title };
       const newLinks = [...pdfLinks, newPdf];
 
       setPdfLinks(newLinks);
       localStorage.setItem("pdfLinks", JSON.stringify(newLinks));
-      setSelectedPdf(pdfLink);
+      setSelectedPdf(link);
       setPdfLink("");
       setConversation([]);
       toast.success(`PDF "${title || "Untitled"}" added successfully!`);
@@ -194,7 +194,8 @@ const App = () => {
         pdfLinks={pdfLinks}
         selectedPdf={selectedPdf}
         selectPdf={selectPdf}
-        isLoading={isProcessing}
+        isProcessing={isProcessing}
+        setIsProcessing={setIsProcessing}
         deletePdf={deletePdf}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}

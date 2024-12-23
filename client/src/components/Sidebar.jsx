@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
+const pdfUploadApi = "https://superadmin.testfree.in/misc/upload/media?user=docmuse";
 
 const Sidebar = ({
   pdfLink,
@@ -8,7 +9,8 @@ const Sidebar = ({
   pdfLinks,
   selectedPdf,
   selectPdf,
-  isLoading,
+  isProcessing,
+  setIsProcessing,
   deletePdf,
   isSidebarOpen,
   setIsSidebarOpen,
@@ -17,6 +19,41 @@ const Sidebar = ({
 }) => {
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    setIsProcessing(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(pdfUploadApi, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        setPdfLink(data.url);
+        await handlePdfSubmit(e, data.url);
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload PDF");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleApiKeyChange = (e) => {
     const newApiKey = e.target.value;
@@ -63,22 +100,46 @@ const Sidebar = ({
           </div>
 
           <form onSubmit={handlePdfSubmit} className="space-y-3">
-            <input
-              type="text"
-              placeholder="Paste PDF URL ..."
-              value={pdfLink}
-              onChange={(e) => setPdfLink(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              disabled={isLoading}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Paste PDF URL ..."
+                value={pdfLink}
+                onChange={(e) => setPdfLink(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                disabled={isProcessing}
+              />
+              <label className="w-12 h-10 flex justify-center items-center bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 active:bg-gray-300 transition-all">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={isProcessing}
+                />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+              </label>
+            </div>
             <button
               type="submit"
-              disabled={isLoading || !pdfLink}
-              className={`w-full px-4 py-3 rounded-lg font-medium transition-all bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 ${
-                isLoading || !pdfLink ? "cursor-not-allowed" : ""
+              disabled={isProcessing || !pdfLink}
+              className={`w-full px-4 py-2.5 rounded-lg font-medium transition-all bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 ${
+                isProcessing || !pdfLink ? "cursor-not-allowed" : ""
               }`}
             >
-              {isLoading ? (
+              {isProcessing ? (
                 <div className="flex items-center justify-center space-x-2">
                   <svg
                     className="animate-spin h-5 w-5 text-white"
@@ -194,7 +255,7 @@ const Sidebar = ({
                   d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <p className="mt-2 text-sm text-gray-500">No PDFs added yet</p>
+              <p className="mt-2 text-sm text-gray-500">No documents added yet</p>
             </div>
           )}
         </div>
