@@ -26,7 +26,7 @@ DocMuse AI is an interactive application that allows users to chat with their PD
 
 ## Screenshot
 
-![App Screenshot](https://i.ibb.co/mTNBxT6/screenshot.png)
+![App Screenshot](https://docmuse.onrender.com/screenshot.png)
 
 ## Usage
 
@@ -91,12 +91,6 @@ Install frontend dependencies:
 npm install
 ```
 
-Create .env file and add:
-
-```bash
-VITE_API_BASE_URL=http://localhost:3000
-```
-
 Start the development server:
 
 ```bash
@@ -132,7 +126,7 @@ node index
 
 - If ports 5173 or 3000 are already in use, the servers will attempt to use the next available port
 - Ensure all dependencies are properly installed before starting the servers
-- Check that the `.env` file is created in the correct location (client directory)
+- Check that the API url inside `.env` file points to correctly (client directory)
 
 ## Contributing
 

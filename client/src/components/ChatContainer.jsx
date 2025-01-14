@@ -31,9 +31,9 @@ const ChatContainer = ({
                 d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
-            <h2 className="hidden sm:block text-sm uppercase font-bold text-gray-800">
+            <h1 className="hidden sm:block text-sm uppercase font-bold text-gray-800">
               Chat with your PDF
-            </h2>
+            </h1>
           </div>
           <div className="flex items-center space-x-2">
             <span
@@ -75,11 +75,11 @@ const ChatContainer = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
                   {selectedPdf
                     ? "Start Your Conversation"
                     : "Select a PDF to Begin"}
-                </h3>
+                </h2>
                 <p className="text-gray-600">
                   {selectedPdf
                     ? "Ask any question about your PDF document"

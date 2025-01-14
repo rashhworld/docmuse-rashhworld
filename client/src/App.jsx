@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import Sidebar from "./components/Sidebar";
 import ChatContainer from "./components/ChatContainer";
+const pdfApi = import.meta.env.VITE_API_PROCESS_PDF;
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -167,14 +168,11 @@ const App = () => {
   };
 
   const invokeDeleteAPi = async (filename) => {
-    await fetch(
-      `https://superadmin.testfree.in/misc/delete/media?user=docmuse`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file: filename }),
-      }
-    );
+    await fetch(`${pdfApi}/delete/media?user=docmuse`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: filename }),
+    });
   };
 
   return (

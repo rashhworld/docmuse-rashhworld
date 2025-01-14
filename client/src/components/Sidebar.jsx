@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
+const pdfApi = import.meta.env.VITE_API_PROCESS_PDF;
 
 const Sidebar = ({
   pdfLink,
@@ -34,13 +35,10 @@ const Sidebar = ({
     formData.append("file", file);
 
     try {
-      const response = await fetch(
-        "https://superadmin.testfree.in/misc/upload/media?user=docmuse",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${pdfApi}/upload/media?user=docmuse`, {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await response.json();
 
